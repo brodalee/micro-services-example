@@ -6,6 +6,8 @@
 parameters:
     KAFKA_CLUSTER_BOOTSTRAP_ENDPOINT: '%env(resolve:KAFKA_CLUSTER_BOOTSTRAP_ENDPOINT)%'
     KAFKA_CDC_EVENT_CONSUMER_GROUP_ID: '%env(resolve:KAFKA_CDC_EVENT_CONSUMER_GROUP_ID)%'
+    JWT_KEY: '%env(string:JWT_KEY)%'
+    JWT_ALGO: '%env(string:JWT_ALGO)%'
 
 services:
     # default configuration for services in *this* file
