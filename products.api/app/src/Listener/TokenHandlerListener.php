@@ -5,7 +5,6 @@ namespace App\Listener;
 use App\Context\UserContext;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class TokenHandlerListener
@@ -13,7 +12,6 @@ class TokenHandlerListener
     public function __construct(
         private readonly HttpClientInterface $authenticationClientApi,
         private readonly UserContext $userContext,
-        private readonly SerializerInterface $serializer,
     )
     {
     }
@@ -26,7 +24,7 @@ class TokenHandlerListener
         }
 
         if (!$request->headers->has('Authorization')) {
-            return;
+            throw new UnauthorizedHttpException("Unauthorized");
         }
 
         $header = $request->headers->get('Authorization');
@@ -49,7 +47,10 @@ class TokenHandlerListener
 
             if ($request->getStatusCode() === 200) {
                 $this->userContext->setToken($token);
+                return;
             }
+
+            throw new UnauthorizedHttpException('Unauthorized');
         } catch (\Exception $ex) {
             throw new UnauthorizedHttpException('Unauthorized');
         }

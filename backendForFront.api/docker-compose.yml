@@ -41,6 +41,7 @@ services:
         target: "/etc/nginx/static_errors.conf"
     external_links:
       - micro_service_authentication_nginx:micro_service_authentication_nginx
+      - micro_service_products_nginx:micro_service_products_nginx
     networks:
       - default
       - micro_service
