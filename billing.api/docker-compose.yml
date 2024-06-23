@@ -1,0 +1,80 @@
+version: '3.8'
+
+volumes:
+  postgresql:
+
+networks:
+  default:
+    driver: bridge
+
+services:
+  nginx:
+    build:
+      context: docker/nginx
+    container_name: ${APP_NAME}_nginx
+    ports:
+      - 8082:80
+    environment:
+      TERM: xterm-color
+      VIRTUAL_PORT: 8081
+      VIRTUAL_HOST: "micro_service_billings.local"
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - type: bind
+        source: "./app/"
+        target: "/project"
+      - type: bind
+        source: "../"
+        target: "/workspace"
+      - type: bind
+        source: "./docker/nginx/nginx.conf"
+        target: "/etc/nginx/nginx.conf"
+      - type: bind
+        source: "./docker/nginx/phpfpm.conf"
+        target: "/etc/nginx/conf.d/phpfpm.conf"
+      - type: bind
+        source: "./docker/nginx/symfony.dev.conf"
+        target: "/etc/nginx/conf.d/default.conf"
+      - type: bind
+        source: "./docker/nginx/static_errors.conf"
+        target: "/etc/nginx/static_errors.conf"
+    networks:
+      - default
+
+  phpfpm:
+    build:
+      context: .
+    container_name: ${APP_NAME}_php-fpm
+    env_file:
+      - .env
+    environment:
+      TERM: xterm-color
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - type: "bind"
+        source: "./app/"
+        target: "/project"
+      - type: "bind"
+        source: "../"
+        target: "/workspace"
+    networks:
+      - default
+
+  postgresql:
+    image: postgres:12.19-alpine3.20
+    container_name: ${APP_NAME}_app_database
+    restart: always
+    volumes:
+      - type: volume
+        source: postgresql
+        target: "/var/lib/postgresql/data"
+    environment:
+      POSTGRES_DB: "billings"
+      POSTGRES_PASSWORD: "symfony"
+      POSTGRES_USER: "symfony"
+    ports:
+      - 5434:5432
+    networks:
+      - default
