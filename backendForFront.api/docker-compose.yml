@@ -3,6 +3,9 @@ version: '3.8'
 networks:
   default:
     driver: bridge
+  micro_service:
+    name: micro_service
+    external: true
 
 services:
   nginx:
@@ -36,8 +39,11 @@ services:
       - type: bind
         source: "./docker/nginx/static_errors.conf"
         target: "/etc/nginx/static_errors.conf"
+    external_links:
+      - micro_service_authentication_nginx:micro_service_authentication_nginx
     networks:
       - default
+      - micro_service
 
   phpfpm:
     build:
@@ -58,3 +64,4 @@ services:
         target: "/workspace"
     networks:
       - default
+      - micro_service

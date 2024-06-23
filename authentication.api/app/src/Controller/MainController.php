@@ -77,6 +77,7 @@ class MainController extends AbstractController
         ParameterBagInterface $parameterBag
     ): Response
     {
+
         if (!$request->headers->has('Authorization')) {
             return new Response('UnAuthorized', Response::HTTP_UNAUTHORIZED);
         }

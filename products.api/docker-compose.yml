@@ -59,6 +59,8 @@ services:
       - type: "bind"
         source: "../"
         target: "/workspace"
+    external_links:
+      - micro_service_authentication_nginx:micro_service_authentication_nginx
     networks:
       - default
 

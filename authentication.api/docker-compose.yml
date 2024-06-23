@@ -6,6 +6,9 @@ volumes:
 networks:
   default:
     driver: bridge
+  micro_service:
+    name: micro_service
+    external: true
 
 services:
   nginx:
@@ -41,6 +44,7 @@ services:
         target: "/etc/nginx/static_errors.conf"
     networks:
       - default
+      - micro_service
 
   phpfpm:
     build:
@@ -61,6 +65,7 @@ services:
         target: "/workspace"
     networks:
       - default
+      - micro_service
 
   postgresql:
     image: postgres:12.19-alpine3.20
