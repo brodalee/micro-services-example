@@ -21,7 +21,7 @@ class MainController extends AbstractController
         #[MapRequestPayload] AddInBasketDto $input,
         BasketRepository $basketRepository,
         UserContext $userContext,
-        ProductsService $productsService
+        ProductsService $productsService,
     ): Response
     {
         if (!$productsService->productExists($input->productId)) {
@@ -70,7 +70,7 @@ class MainController extends AbstractController
         #[MapEntity(id: 'id')] Basket $basket,
         BasketRepository $basketRepository,
         UserContext $userContext,
-    )
+    ): Response
     {
         if ($basket->getUserId() !== $userContext->getId()) {
             return new Response('', Response::HTTP_FORBIDDEN);
