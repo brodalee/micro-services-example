@@ -19,10 +19,6 @@ framework:
                 base_uri: '%env(string:PRODUCT_DOMAIN_URI)%'
                 headers:
                     'Content-Type': 'application/json'
-            basket.client.api:
-                base_uri: '%env(string:BASKET_DOMAIN_URI)%'
-                headers:
-                    'Content-Type': 'application/json'
 
 when@test:
     framework:

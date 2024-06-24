@@ -22,15 +22,24 @@ bin/kafka-topics.sh --list --bootstrap-server="kafka:9092"
 bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list kafka:9092 --topic messages
 ```
 
-
 Auth micro service :
 
+```bash
 symfony serve --port=8080
+```
 
 product micro service :
-
+```bash
 symfony serve --port=8081
+```
 
 backend service :
-
+```bash
 symfony serve --port=8090
+```
+
+basket micro service :
+
+```bash
+symfony serve --port=8082
+```
