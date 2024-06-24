@@ -25,6 +25,10 @@ class UserContext
 
     public function getToken(): ?string
     {
+        if (!$this->token) {
+            throw new UnauthorizedHttpException("Not authenticated");
+        }
+
         return $this->token;
     }
 

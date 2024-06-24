@@ -15,6 +15,10 @@ framework:
                 base_uri: '%env(string:AUTHENTICATION_DOMAIN_URI)%'
                 headers:
                     'Content-Type': 'application/json'
+            product.client.api:
+                base_uri: '%env(string:PRODUCT_DOMAIN_URI)%'
+                headers:
+                    'Content-Type': 'application/json'
 
 when@test:
     framework:
