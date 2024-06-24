@@ -24,10 +24,10 @@ class Products
     private ?\DateTimeInterface $creationDate;
 
     #[ORM\Column]
-    private ?int $ram = null;
+    private string $ram;
 
     #[ORM\Column]
-    private ?int $storage = null;
+    private string $storage;
 
     #[ORM\Column(length: 255)]
     private ?string $color = null;
@@ -42,10 +42,16 @@ class Products
     private ?string $processor = null;
 
     #[ORM\Column]
-    private ?int $frontCameraResolution = null;
+    private string $frontCameraResolution;
 
     #[ORM\Column]
-    private ?int $backCameraResolution = null;
+    private string $backCameraResolution;
+
+    #[ORM\Column(length: 255)]
+    private ?string $imgUrl = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $brand = null;
 
     public function __construct()
     {
@@ -94,24 +100,24 @@ class Products
         return $this;
     }
 
-    public function getRam(): ?int
+    public function getRam(): string
     {
         return $this->ram;
     }
 
-    public function setRam(int $ram): static
+    public function setRam(string $ram): static
     {
         $this->ram = $ram;
 
         return $this;
     }
 
-    public function getStorage(): ?int
+    public function getStorage(): string
     {
         return $this->storage;
     }
 
-    public function setStorage(int $storage): static
+    public function setStorage(string $storage): static
     {
         $this->storage = $storage;
 
@@ -166,26 +172,50 @@ class Products
         return $this;
     }
 
-    public function getFrontCameraResolution(): ?int
+    public function getFrontCameraResolution(): string
     {
         return $this->frontCameraResolution;
     }
 
-    public function setFrontCameraResolution(int $frontCameraResolution): static
+    public function setFrontCameraResolution(string $frontCameraResolution): static
     {
         $this->frontCameraResolution = $frontCameraResolution;
 
         return $this;
     }
 
-    public function getBackCameraResolution(): ?int
+    public function getBackCameraResolution(): string
     {
         return $this->backCameraResolution;
     }
 
-    public function setBackCameraResolution(int $backCameraResolution): static
+    public function setBackCameraResolution(string $backCameraResolution): static
     {
         $this->backCameraResolution = $backCameraResolution;
+
+        return $this;
+    }
+
+    public function getImgUrl(): ?string
+    {
+        return $this->imgUrl;
+    }
+
+    public function setImgUrl(string $imgUrl): static
+    {
+        $this->imgUrl = $imgUrl;
+
+        return $this;
+    }
+
+    public function getBrand(): ?string
+    {
+        return $this->brand;
+    }
+
+    public function setBrand(string $brand): static
+    {
+        $this->brand = $brand;
 
         return $this;
     }
