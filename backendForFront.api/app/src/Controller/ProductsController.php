@@ -39,6 +39,34 @@ class ProductsController extends AbstractController
             if ($request->getStatusCode() === 200) {
                 return $this->json(json_decode($request->getContent()));
             }
+
+            if ($request->getStatusCode() === 401) {
+                return $this->json(['error' => 'UnAuthorized'], Response::HTTP_UNAUTHORIZED);
+            }
+        } catch (\Exception $ex) {
+            return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    #[Route('/{id}', methods: ['DELETE'])]
+    public function delete(
+        string $id,
+        HttpClientInterface $productClientApi,
+        UserContext $userContext,
+    ): Response
+    {
+        try {
+            $request = $productClientApi->request(
+                'DELETE',
+                "products/$id",
+                ['headers' => ['Authorization' => 'Bearer ' . $userContext->getToken()]]
+            );
+
+            if ($request->getStatusCode() === 204) {
+                return new Response('', Response::HTTP_NO_CONTENT);
+            }
         } catch (\Exception $ex) {
             return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

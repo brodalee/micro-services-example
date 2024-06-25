@@ -24,7 +24,8 @@ class TokenHandlerListener
         }
 
         if (!$request->headers->has('Authorization')) {
-            throw new UnauthorizedHttpException("Unauthorized");
+            return;
+            //throw new UnauthorizedHttpException("Unauthorized");
         }
 
         $header = $request->headers->get('Authorization');
