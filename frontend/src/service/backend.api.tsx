@@ -52,14 +52,33 @@ type FetchProductsResponse = {
     totalCount: number
     nextPage: number|null
     previousPage: number|null
-    products: {
-        id: string
-        designation: string
-        price: number
-        brand: string
-        imgUrl: string
-    }[]
+    products: Product[]
+}
+
+export type Product = {
+    id: string
+    designation: string
+    price: number
+    brand: string
+    imgUrl: string
+    ram: string
+    processor: string
+    resolution: string
 }
 export const fetchProducts = async ({limit = 20, page} : FetchProductsParams): Promise<FetchProductsResponse> => {
     return await httpClient.get<any, FetchProductsResponse>('products', {params: {limit, page}})
+}
+
+export type FetchBasketResponse = {
+    id: string
+    name: string
+    price: number
+    reference: string
+}
+export const fetchBasket = async (): Promise<FetchBasketResponse[]> => {
+    return await httpClient.get<any, FetchBasketResponse[]>('basket')
+}
+
+export const addProductInBasket = async (productId: string) => {
+    return await httpClient.post('basket/add', {productId})
 }

@@ -5,41 +5,44 @@ import Home from "./page/Home";
 import ProtectedRoute from "./component/ProtectedRoute";
 import {userAtom} from "./store/userAtom.tsx";
 import {httpClient} from "./service/backend.api.tsx";
+import {Provider} from "./context/basketContext.tsx";
 
 function App() {
-  return (
-    <RecoilRoot>
-      <SetupApp />
-    </RecoilRoot>
-  )
+    return (
+        <RecoilRoot>
+            <SetupApp/>
+        </RecoilRoot>
+    )
 }
 
 const SetupApp = () => {
-  const userState = useRecoilValue(userAtom)
-  if (userState) {
-    httpClient.defaults.headers.common['Authorization'] = 'Bearer ' + userState.token
-  }
+    const userState = useRecoilValue(userAtom)
+    if (userState) {
+        httpClient.defaults.headers.common['Authorization'] = 'Bearer ' + userState.token
+    }
 
-  return (
-      <RouterProvider router={router} />
-  )
+    return (
+        <Provider>
+            <RouterProvider router={router}/>
+        </Provider>
+    )
 }
 
 const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: <Login />,
-  },
-  {
-    path: '/',
-    element: <ProtectedRoute />,
-    children: [
-      {
-        path: '',
-        element: <Home />
-      }
-    ]
-  }
+    {
+        path: '/login',
+        element: <Login/>,
+    },
+    {
+        path: '/',
+        element: <ProtectedRoute/>,
+        children: [
+            {
+                path: '',
+                element: <Home/>
+            }
+        ]
+    }
 ])
 
 export default App

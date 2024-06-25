@@ -99,15 +99,17 @@ class BasketController extends AbstractController
             $finalData = [];
             // TODO : question à poser pour David : Comment optimiser ce morceau de code
             foreach ($data as $product) {
-                $apiProduct = $productsService->getProductById($product->id);
+                $apiProduct = $productsService->getProductById($product->productId);
                 if (!$apiProduct) {
                     return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
 
                 $finalData[] = [
-                    'id' => $product->id,
-                    'name' => $product->designation,
-                    'price' => $product->price,
+                    'id' => $apiProduct->id,
+                    'name' => $apiProduct->designation,
+                    'price' => $apiProduct->price,
+                    'reference' => $product->id,
+                    'quantity' => $product->quantity
                 ];
             }
 

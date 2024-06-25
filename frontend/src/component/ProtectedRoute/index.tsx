@@ -2,6 +2,7 @@ import React from "react";
 import {useRecoilValue} from "recoil";
 import {userAtom} from "../../store/userAtom.tsx";
 import {Navigate, Outlet} from "react-router-dom";
+import NavBar from "../NavBar";
 
 type Props = {
     children: React.ReactNode
@@ -14,6 +15,9 @@ export default ({children}: Props) => {
     }
 
     return (
-        <Outlet />
+        <>
+            <NavBar />
+            <Outlet />
+        </>
     )
 }
