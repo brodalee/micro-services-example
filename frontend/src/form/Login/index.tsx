@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {useLazyQuery} from "../../hook/useLazyQuery.tsx";
-import {login, LoginResponse} from "../../service/backend.api.tsx";
+import {httpClient, login, LoginResponse} from "../../service/backend.api.tsx";
 import {useNavigate} from "react-router-dom";
 import {useSetRecoilState} from "recoil";
 import {userAtom} from "../../store/userAtom.tsx";
@@ -20,6 +20,7 @@ export default () => {
     useEffect(() => {
         if (!isLoading && hasLoaded && isSuccess) {
             setUser({token: data?.token!})
+            httpClient.defaults.headers.common['Authorization'] = 'Bearer ' + data?.token!
             navigate('/')
         }
     }, [isLoading, hasLoaded, isSuccess])

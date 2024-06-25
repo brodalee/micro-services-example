@@ -42,3 +42,24 @@ export type LoginResponse = null|{
 export const login = async (params: LoginParams): Promise<LoginResponse> => {
     return await httpClient.post<any, LoginResponse>('authentication/login', params)
 }
+
+type FetchProductsParams = {
+    page: number
+    limit: number
+}
+type FetchProductsResponse = {
+    totalPage: number
+    totalCount: number
+    nextPage: number|null
+    previousPage: number|null
+    products: {
+        id: string
+        designation: string
+        price: number
+        brand: string
+        imgUrl: string
+    }[]
+}
+export const fetchProducts = async ({limit = 20, page} : FetchProductsParams): Promise<FetchProductsResponse> => {
+    return await httpClient.get<any, FetchProductsResponse>('products', {params: {limit, page}})
+}

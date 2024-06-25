@@ -1,14 +1,27 @@
-import {RecoilRoot} from 'recoil';
+import {RecoilRoot, useRecoilValue} from 'recoil';
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import Login from "./page/Login";
 import Home from "./page/Home";
 import ProtectedRoute from "./component/ProtectedRoute";
+import {userAtom} from "./store/userAtom.tsx";
+import {httpClient} from "./service/backend.api.tsx";
 
 function App() {
   return (
     <RecoilRoot>
-      <RouterProvider router={router} />
+      <SetupApp />
     </RecoilRoot>
+  )
+}
+
+const SetupApp = () => {
+  const userState = useRecoilValue(userAtom)
+  if (userState) {
+    httpClient.defaults.headers.common['Authorization'] = 'Bearer ' + userState.token
+  }
+
+  return (
+      <RouterProvider router={router} />
   )
 }
 
