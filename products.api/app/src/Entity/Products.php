@@ -53,6 +53,9 @@ class Products
     #[ORM\Column(length: 255)]
     private ?string $brand = null;
 
+    #[ORM\Column]
+    private ?int $stocks = null;
+
     public function __construct()
     {
         $this->id = Uuid::v4();
@@ -216,6 +219,18 @@ class Products
     public function setBrand(string $brand): static
     {
         $this->brand = $brand;
+
+        return $this;
+    }
+
+    public function getStocks(): ?int
+    {
+        return $this->stocks;
+    }
+
+    public function setStocks(int $stocks): static
+    {
+        $this->stocks = $stocks;
 
         return $this;
     }

@@ -43,10 +43,14 @@ class CreateProductsCommand extends Command
                         ->setRam($this->getMemory($details->specifications))
                         ->setResolution($this->getResolution($details->specifications))
                         ->setProcessor($this->getProcessor($details->specifications))
+                        ->setStocks(rand(0, 500))
                     ;
 
                     $this->entityManager->persist($product);
                     $this->entityManager->flush();
+                    $output->writeln(
+                        sprintf('Inserted %s', $details->phone_name)
+                    );
                 } catch (\Exception $ex) {
                     $output->writeln(
                         sprintf('%s', $ex->getMessage())

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Products;
+use App\Producer\KafkaProducer;
 use App\Repository\ProductsRepository;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -72,5 +73,18 @@ class MainController extends AbstractController
     ): Response
     {
         return $this->json($product);
+    }
+
+    #[Route('products/{id}', methods: ['DELETE'])]
+    public function delete(
+        #[MapEntity(id: 'id')] Products $product,
+        ProductsRepository $productsRepository,
+        KafkaProducer $kafkaProducer
+    ): Response
+    {
+        $productsRepository->remove($product);
+        $kafkaProducer->generateKafkaMessage($product, 'DELETE');
+
+        return new Response('', Response::HTTP_NO_CONTENT);
     }
 }
