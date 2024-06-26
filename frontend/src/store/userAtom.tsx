@@ -10,5 +10,5 @@ type UserAtom = null|{
 export const userAtom = atom<UserAtom>({
     key: 'user',
     default: null,
-    effects_UNSTABLE: [persistAtom],
+    //effects_UNSTABLE: [persistAtom],
 })

@@ -1,6 +1,9 @@
 import {createContext, useEffect, useState} from "react";
 import {useQuery} from "../hook/useQuery.tsx";
 import {fetchBasket, FetchBasketResponse} from "../service/backend.api.tsx";
+import {useRecoilValue} from "recoil";
+import {userAtom} from "../store/userAtom.tsx";
+import {useLazyQuery} from "../hook/useLazyQuery.tsx";
 
 export type basketDefaultValue = {
     refresh: Function
@@ -16,9 +19,10 @@ type Props = {
 }
 
 export const Provider = ({children}: Props) => {
-    const {data, isSuccess, isLoading, triggerAgain} = useQuery<FetchBasketResponse[]>(
+    const {data, isSuccess, isLoading, call} = useLazyQuery<FetchBasketResponse[]>(
         () => fetchBasket()
     )
+    const auth = useRecoilValue(userAtom)
 
     const [products, setProducts] = useState<FetchBasketResponse[]>([])
 
@@ -27,12 +31,16 @@ export const Provider = ({children}: Props) => {
             setProducts(data)
         }
     }, [isLoading, isSuccess]);
-    const refresh = () => triggerAgain()
+    const refresh = () => {
+        if (auth) {
+            call()
+        }
+    }
 
     useEffect(() => {
         const interval = setInterval(() => {
             refresh()
-        }, 10000)
+        }, 15000)
 
         return () => clearInterval(interval)
     });

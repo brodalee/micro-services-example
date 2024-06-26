@@ -29,6 +29,7 @@ class Notifications
     public function __construct()
     {
         $this->id = Uuid::v4();
+        $this->creationDate = new \DateTimeImmutable();
     }
 
     public function getId(): string

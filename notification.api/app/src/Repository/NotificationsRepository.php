@@ -17,12 +17,14 @@ class NotificationsRepository extends ServiceEntityRepository
         parent::__construct($registry, Notifications::class);
     }
 
-    public function fetchLast(string $userId)
+    public function fetchLast(string $userId): array
     {
         return $this->createQueryBuilder('n')
             ->select('n')
-            ->where('n.userId = :useId')
-                ->setParameter($userId)
+            ->where('n.userId = :userId')
+                ->setParameter('userId', $userId)
+            ->andWhere('n.seen = :seen')
+                ->setParameter('seen', false)
             ->setFirstResult(0)
             ->setMaxResults(5)
             ->orderBy('n.creationDate', 'DESC')

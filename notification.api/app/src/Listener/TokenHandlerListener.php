@@ -3,6 +3,7 @@
 namespace App\Listener;
 
 use App\Context\UserContext;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -12,6 +13,7 @@ class TokenHandlerListener
     public function __construct(
         private readonly HttpClientInterface $authenticationClientApi,
         private readonly UserContext $userContext,
+        private readonly LoggerInterface $logger
     )
     {
     }

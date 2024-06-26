@@ -6,6 +6,9 @@ import ProtectedRoute from "./component/ProtectedRoute";
 import {userAtom} from "./store/userAtom.tsx";
 import {httpClient} from "./service/backend.api.tsx";
 import {Provider} from "./context/basketContext.tsx";
+import {NotificationProvider} from "./context/notificationContext.tsx";
+import {ToastContainer} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
     return (
@@ -22,9 +25,14 @@ const SetupApp = () => {
     }
 
     return (
-        <Provider>
-            <RouterProvider router={router}/>
-        </Provider>
+        <>
+            <Provider>
+                <NotificationProvider>
+                    <RouterProvider router={router}/>
+                </NotificationProvider>
+            </Provider>
+            <ToastContainer/>
+        </>
     )
 }
 

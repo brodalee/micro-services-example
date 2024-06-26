@@ -43,3 +43,8 @@ basket micro service :
 ```bash
 symfony serve --port=8082
 ```
+
+notifications micro service:
+```bash
+symfony serve --port=8093
+```

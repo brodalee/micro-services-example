@@ -40,7 +40,7 @@ export type LoginResponse = null|{
     token: string
 }
 export const login = async (params: LoginParams): Promise<LoginResponse> => {
-    return await httpClient.post<any, LoginResponse>('authentication/login', params)
+    return await httpClient.post('authentication/login', params)
 }
 
 type FetchProductsParams = {
@@ -66,7 +66,7 @@ export type Product = {
     resolution: string
 }
 export const fetchProducts = async ({limit = 20, page} : FetchProductsParams): Promise<FetchProductsResponse> => {
-    return await httpClient.get<any, FetchProductsResponse>('products', {params: {limit, page}})
+    return await httpClient.get('products', {params: {limit, page}})
 }
 
 export type FetchBasketResponse = {
@@ -77,9 +77,22 @@ export type FetchBasketResponse = {
     quantity: number
 }
 export const fetchBasket = async (): Promise<FetchBasketResponse[]> => {
-    return await httpClient.get<any, FetchBasketResponse[]>('basket')
+    return await httpClient.get('basket')
 }
 
 export const addProductInBasket = async (productId: string) => {
     return await httpClient.post('basket/add', {productId})
+}
+
+type FetchNotificationResponse = {
+    id: string
+    message: string
+}
+
+export const fetchNotifications = async (): Promise<FetchNotificationResponse[]> => {
+    return await httpClient.get('notifications')
+}
+
+export const markNotificationAsSeen = async (notificationId: string) => {
+    return await httpClient.patch('notifications/' + notificationId)
 }

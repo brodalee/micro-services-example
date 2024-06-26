@@ -23,6 +23,10 @@ framework:
                 base_uri: '%env(string:BASKET_DOMAIN_URI)%'
                 headers:
                     'Content-Type': 'application/json'
+            notification.client.api:
+                base_uri: '%env(string:NOTIFICATIONS_DOMAIN_URI)%'
+                headers:
+                    'Content-Type': 'application/json'
 
 when@test:
     framework:
