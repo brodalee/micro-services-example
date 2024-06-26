@@ -82,7 +82,7 @@ class MainController extends AbstractController
         KafkaProducer $kafkaProducer
     ): Response
     {
-        $productsRepository->remove($product);
+        //$productsRepository->remove($product);
         $kafkaProducer->generateKafkaMessage($product, 'DELETE');
 
         return new Response('', Response::HTTP_NO_CONTENT);

@@ -2,15 +2,9 @@ import {createContext, useEffect, useState} from "react";
 import {useQuery} from "../hook/useQuery.tsx";
 import {fetchBasket, FetchBasketResponse} from "../service/backend.api.tsx";
 
-export type BasketProduct = {
-    id: string
-    productId: string
-    quantity: number
-}
-
 export type basketDefaultValue = {
     refresh: Function
-    products: BasketProduct[]
+    products: FetchBasketResponse[]
 }
 export const BasketContext = createContext<basketDefaultValue>({
     refresh: () => {},
@@ -29,12 +23,19 @@ export const Provider = ({children}: Props) => {
     const [products, setProducts] = useState<FetchBasketResponse[]>([])
 
     useEffect(() => {
-        if (isLoading && isSuccess) {
+        if (!isLoading && isSuccess) {
             setProducts(data)
         }
     }, [isLoading, isSuccess]);
-
     const refresh = () => triggerAgain()
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            refresh()
+        }, 10000)
+
+        return () => clearInterval(interval)
+    });
 
     return (
         <BasketContext.Provider value={{refresh, products}}>

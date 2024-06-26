@@ -8,7 +8,20 @@ export default () => {
 
     const addProduct = addProductHook(basket)
 
-    return {addProduct}
+    const countProduct = () => {
+        return basket.products.map(p => p.quantity)
+            .reduce((a, b) => a + b, 0)
+    }
+
+    const hasProductInBasket = (productId: string) => {
+        return basket.products.find(p => p.id === productId) !== undefined
+    }
+
+    const quantity = (productId: string) => {
+        return basket.products.find(p => p.id === productId).quantity
+    }
+
+    return {addProduct, count: countProduct(), hasProductInBasket, quantity}
 }
 
 const addProductHook = (basket: basketDefaultValue) => {

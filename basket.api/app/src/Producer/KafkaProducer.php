@@ -14,7 +14,7 @@ class KafkaProducer
     {
     }
 
-    public function generateKafkaMessage(Products $product, string $type): void
+    public function generateKafkaMessage(string $message, string $userId, string $type): void
     {
         $conf = new Conf();
         $conf->set('log_level', (string)LOG_DEBUG);
@@ -28,11 +28,11 @@ class KafkaProducer
             RD_KAFKA_PARTITION_UA,
             0,
             json_encode([
-                'table' => 'products',
+                'table' => 'notifications',
                 'type' => $type,
                 'data' => [
-                    'id' => $product->getId(),
-                    'name' => $product->getDesignation()
+                    'message' => $message,
+                    'userId' => $userId
                 ]
             ])
         );

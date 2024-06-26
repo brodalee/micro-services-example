@@ -74,6 +74,7 @@ export type FetchBasketResponse = {
     name: string
     price: number
     reference: string
+    quantity: number
 }
 export const fetchBasket = async (): Promise<FetchBasketResponse[]> => {
     return await httpClient.get<any, FetchBasketResponse[]>('basket')

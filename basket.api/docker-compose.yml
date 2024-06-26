@@ -6,6 +6,9 @@ volumes:
 networks:
   default:
     driver: bridge
+  micro_service:
+    name: micro_service
+    external: true
 
 services:
   nginx:
@@ -59,8 +62,11 @@ services:
       - type: "bind"
         source: "../"
         target: "/workspace"
+    external_links:
+      - micro_service_kafka:micro_service_kafka
     networks:
       - default
+      - micro_service
 
   postgresql:
     image: postgres:12.19-alpine3.20

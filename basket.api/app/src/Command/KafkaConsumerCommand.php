@@ -2,13 +2,15 @@
 
 namespace App\Command;
 
+use App\Consumer\Searcher;
+use RdKafka\Conf;
+use RdKafka\KafkaConsumer;
+use RdKafka\Message;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use RdKafka\Conf;
-use RdKafka\KafkaConsumer;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 #[AsCommand(
@@ -22,6 +24,7 @@ class KafkaConsumerCommand extends Command
 
     public function __construct(
         private readonly ParameterBagInterface $params,
+        private readonly Searcher $searcher
     )
     {
         parent::__construct();
@@ -50,14 +53,15 @@ class KafkaConsumerCommand extends Command
                 $message = $consumer->consume(self::TIMEOUT);
                 switch ($message->err) {
                     case RD_KAFKA_RESP_ERR_NO_ERROR:
-                        $output->writeln(
-                            sprintf(
-                                '%s', $message->payload
-                            )
-                        );
-                        // Envoi à kafka le fait qu'on a bien lu le message
-                        // Et donc on passe au prochain offset
-                        $consumer->commit($message);
+                        $output->writeln('Consuming message ..');
+                        if ($this->consumeMessage($message)) {
+                            // Envoi à kafka le fait qu'on a bien lu le message
+                            // Et donc on passe au prochain offset
+                            $consumer->commit($message);
+                            $output->writeln('Message consumed !');
+                        } else {
+                            $output->writeln('Failed to consume message');
+                        }
                         break;
                     case RD_KAFKA_RESP_ERR__PARTITION_EOF:
                     case RD_KAFKA_RESP_ERR__TIMED_OUT:
@@ -72,12 +76,19 @@ class KafkaConsumerCommand extends Command
         }
     }
 
+    private function consumeMessage(Message $message): bool
+    {
+        $data = json_decode($message->payload);
+        $consumer = $this->searcher->get($data->table, $data->type);
+        return $consumer->consume($data->data);
+    }
+
     private function getKafkaConfiguration(): Conf
     {
         $kafkaUrl = (string) $this->params->get('KAFKA_CLUSTER_BOOTSTRAP_ENDPOINT');
         $conf = new Conf();
         $conf->set('group.id', (string) $this->params->get('KAFKA_CDC_EVENT_CONSUMER_GROUP_ID'));
-        $conf->set('metadata.broker.list', $kafkaUrl);
+        $conf->set('metadata.broker.list', "localhost:9092");
         $conf->set('enable.auto.commit', 'false'); // On commit seulement une fois que le message a bien été lu.
         $conf->set('auto.offset.reset', 'latest');
 

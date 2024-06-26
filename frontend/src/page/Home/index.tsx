@@ -45,7 +45,7 @@ export default () => {
                                         <li className="list-group-item">{product.ram}</li>
                                     </ul>
                                     <div className={'text-center'}>
-                                        <button onClick={() => basket.addProduct(product.id)} className="btn btn-info">Ajouter au panier</button>
+                                        <button onClick={() => basket.addProduct(product.id)} className="btn btn-info">Ajouter au panier {(basket.hasProductInBasket(product.id) ? "( " +basket.quantity(product.id) + " )" : '')}</button>
                                     </div>
                                 </div>
                             ))}
