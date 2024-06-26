@@ -106,3 +106,28 @@ type ValidateBasketResponse = {
 export const validateBasket = async (): Promise<ValidateBasketResponse> => {
     return await httpClient.post('basket/validate')
 }
+
+type FetchBillingsResponse = {
+    billings: Billing[]
+}
+
+type Billing = {
+    id: string
+    totalPrice: number
+    creationDate: string
+    tva: number
+    items: Item[]
+    paymentMethod: string
+    isPaymentSucceeded: boolean
+}
+
+type Item = {
+    id: string
+    price: number
+    quantity: number
+    productName: string
+}
+
+export const fetchBillings = async (): Promise<FetchBillingsResponse> => {
+    return await httpClient.get('billings')
+}

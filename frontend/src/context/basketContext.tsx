@@ -39,7 +39,7 @@ export const Provider = ({children}: Props) => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            refresh()
+            //refresh()
         }, 15000)
 
         return () => clearInterval(interval)

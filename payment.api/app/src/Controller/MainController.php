@@ -11,6 +11,7 @@ use App\Producer\KafkaProducer;
 use App\Repository\PaymentsRepository;
 use App\Services\BillingService;
 use Stripe\StripeClient;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -62,7 +63,9 @@ class MainController extends AbstractController
             ->setStatus(PaymentStatus::WAITING_FOR_PAYMENT)
             ->setMethod(PaymentMethod::CARD)
             ->setBillingId($input->billingId)
+            ->setStripeReference($intent->id)
         ;
+
         $repository->save($payment);
         $producer->generateKafkaMessage(
             $input->billingId,
@@ -74,6 +77,28 @@ class MainController extends AbstractController
         return $this->json([
             'secret' => $intent->client_secret,
             'paymentReference' => $payment->getId(),
+        ]);
+    }
+
+    #[Route('payments/{id}', methods: ['GET'])]
+    public function fetchPaymentById(
+        #[MapEntity(id: 'id')] Payments $payment,
+        UserContext $userContext,
+        StripeClient $client
+    ): Response
+    {
+        if ($userContext->getId() !== $payment->getUserId()) {
+            return $this->json(['error' => 'Bad userId or paymentId'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $stripePayment = $client->paymentIntents->retrieve($payment->getStripeReference());
+
+        return $this->json([
+            'id' => $payment->getId(),
+            'billingId' => $payment->getBillingId(),
+            'method' => $payment->getMethod()->value,
+            'isPaymentSucceeded' => $stripePayment->status === 'succeeded',
+            'creationDate' => $payment->getCreationDate()->format('Y-m-d H:i:s')
         ]);
     }
 }

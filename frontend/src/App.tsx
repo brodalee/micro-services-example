@@ -10,6 +10,7 @@ import {NotificationProvider} from "./context/notificationContext.tsx";
 import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import Basket from "./page/Basket";
+import Account from "./page/Account";
 
 function App() {
     return (
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
             {
                 path: '/basket',
                 element: <Basket />
+            },
+            {
+                path: '/account',
+                element: <Account />
             }
         ]
     }

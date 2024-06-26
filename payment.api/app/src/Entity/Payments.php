@@ -29,6 +29,9 @@ class Payments
     #[ORM\Column(length: 255)]
     private ?string $userId = null;
 
+    #[ORM\Column(length: 255)]
+    private string $stripeReference;
+
     public function __construct()
     {
         $this->id = Uuid::v4();
@@ -96,6 +99,18 @@ class Payments
     public function setUserId(string $userId): static
     {
         $this->userId = $userId;
+
+        return $this;
+    }
+
+    public function getStripeReference(): ?string
+    {
+        return $this->stripeReference;
+    }
+
+    public function setStripeReference(string $stripeReference): static
+    {
+        $this->stripeReference = $stripeReference;
 
         return $this;
     }

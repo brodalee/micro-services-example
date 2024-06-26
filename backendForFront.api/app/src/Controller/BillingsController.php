@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Context\UserContext;
 use App\Dto\Billings\CreateBillingDto;
+use App\Services\PaymentService;
+use App\Services\ProductsService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +21,8 @@ class BillingsController extends AbstractController
     public function fetchBillings(
         UserContext $userContext,
         HttpClientInterface $billingsClientApi,
+        ProductsService $productsService,
+        PaymentService $paymentService,
         Request $request
     ): Response
     {
@@ -39,9 +43,27 @@ class BillingsController extends AbstractController
         );
 
         if ($request->getStatusCode() === 200) {
-            return $this->json(
-                json_decode($request->getContent())
-            );
+            $data = json_decode($request->getContent());
+            foreach ($data->billings as &$billing) {
+                foreach ($billing->items as &$item) {
+                    $product = $productsService->getProductById($item->productId);
+                    if (!$product) {
+                        return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                    }
+
+                    $item->productName = $product->designation;
+                }
+
+                $payment = $paymentService->fetchPaymentById($billing->paymentReference);
+                if (!$payment) {
+                    return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                $billing->paymentMethod = $payment->method;
+                $billing->isPaymentSucceeded = $payment->isPaymentSucceeded;
+            }
+
+            return $this->json($data);
         }
 
         return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
