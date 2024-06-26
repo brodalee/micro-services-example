@@ -17,7 +17,7 @@ services:
     environment:
       TERM: xterm-color
       VIRTUAL_PORT: 8081
-      VIRTUAL_HOST: "micro_service_payments.local"
+      VIRTUAL_HOST: "micro_service_notifications.local"
     cap_add:
       - SYS_PTRACE
     volumes:
@@ -71,10 +71,10 @@ services:
         source: postgresql
         target: "/var/lib/postgresql/data"
     environment:
-      POSTGRES_DB: "payments"
+      POSTGRES_DB: "notifications"
       POSTGRES_PASSWORD: "symfony"
       POSTGRES_USER: "symfony"
     ports:
-      - 5435:5432
+      - 5441:5432
     networks:
       - default

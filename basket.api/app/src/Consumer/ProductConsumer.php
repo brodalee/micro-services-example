@@ -30,7 +30,7 @@ class ProductConsumer implements ConsumerInterface
         foreach ($baskets as $basket) {
             $this->basketRepository->remove($basket);
             $this->kafkaProducer->generateKafkaMessage(
-                "Le produit $name n'est plus disponnible à la vente.",
+                "Le produit $name n'est plus disponible à la vente et à donc été supprimé de votre panier.",
                 $basket->getUserId(),
                 'CREATE'
             );
