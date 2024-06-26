@@ -21,3 +21,7 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Listener\TokenHandlerListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.request }

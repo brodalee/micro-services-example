@@ -9,6 +9,7 @@ import {Provider} from "./context/basketContext.tsx";
 import {NotificationProvider} from "./context/notificationContext.tsx";
 import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import Basket from "./page/Basket";
 
 function App() {
     return (
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
             {
                 path: '',
                 element: <Home/>
+            },
+            {
+                path: '/basket',
+                element: <Basket />
             }
         ]
     }

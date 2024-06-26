@@ -75,6 +75,6 @@ services:
       POSTGRES_PASSWORD: "symfony"
       POSTGRES_USER: "symfony"
     ports:
-      - 5435:5432
+      - 5445:5432
     networks:
       - default

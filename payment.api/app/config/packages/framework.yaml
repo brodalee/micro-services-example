@@ -11,12 +11,12 @@ framework:
 
     http_client:
         scoped_clients:
-            facebook.client.api:
-                base_uri: 'https://graph.facebook.com/'
+            authentication.client.api:
+                base_uri: '%env(string:AUTHENTICATION_DOMAIN_URI)%'
                 headers:
                     'Content-Type': 'application/json'
-            geoapi.gouv.fr.client.api:
-                base_uri: 'https://geo.api.gouv.fr/'
+            billing.client.api:
+                base_uri: '%env(string:BILLING_DOMAIN_URI)%'
                 headers:
                     'Content-Type': 'application/json'
 
