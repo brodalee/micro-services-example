@@ -80,7 +80,7 @@ class KafkaConsumerCommand extends Command
     {
         $data = json_decode($message->payload);
         $consumer = $this->searcher->get($data->table, $data->type);
-        return $consumer->consume($data->data);
+        return $consumer?->consume($data->data) ?? true;
     }
 
     private function getKafkaConfiguration(): Conf

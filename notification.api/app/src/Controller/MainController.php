@@ -29,7 +29,7 @@ class MainController extends AbstractController
         #[MapEntity(id: 'id')] Notifications $notification,
         UserContext $userContext,
         NotificationsRepository $repository
-    )
+    ): Response
     {
         if ($userContext->getId() !== $notification->getUserId()) {
             return $this->json(['error' => 'Invalid user or notification id'], Response::HTTP_BAD_REQUEST);
