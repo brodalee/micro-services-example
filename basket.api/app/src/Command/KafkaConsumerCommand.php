@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 class KafkaConsumerCommand extends Command
 {
     private const OPTION_TOPIC_NAME = 'topic';
-    private const TIMEOUT = 1000 * 60 * 2; // 2 minutes avant timeout.
+    private const TIMEOUT = 1000 * 60 * 30; // 2 minutes avant timeout.
 
 
     public function __construct(
