@@ -7,6 +7,7 @@ use App\Dto\CreatePaymentDto;
 use App\Entity\PaymentMethod;
 use App\Entity\Payments;
 use App\Entity\PaymentStatus;
+use App\Producer\KafkaProducer;
 use App\Repository\PaymentsRepository;
 use App\Services\BillingService;
 use Stripe\StripeClient;
@@ -25,6 +26,7 @@ class MainController extends AbstractController
         StripeClient $client,
         PaymentsRepository $repository,
         BillingService $billingService,
+        KafkaProducer $producer
     ): Response
     {
         $email = $userContext->getEmail();
@@ -62,6 +64,12 @@ class MainController extends AbstractController
             ->setBillingId($input->billingId)
         ;
         $repository->save($payment);
+        $producer->generateKafkaMessage(
+            $input->billingId,
+            $payment->getId(),
+            $userContext->getId(),
+            'UPDATE'
+        );
 
         return $this->json([
             'secret' => $intent->client_secret,

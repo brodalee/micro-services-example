@@ -96,3 +96,13 @@ export const fetchNotifications = async (): Promise<FetchNotificationResponse[]>
 export const markNotificationAsSeen = async (notificationId: string) => {
     return await httpClient.patch('notifications/' + notificationId)
 }
+
+type ValidateBasketResponse = {
+    billingId: string
+    clientRef: string
+    paymentReference: string
+}
+
+export const validateBasket = async (): Promise<ValidateBasketResponse> => {
+    return await httpClient.post('basket/validate')
+}

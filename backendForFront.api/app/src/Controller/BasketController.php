@@ -118,4 +118,73 @@ class BasketController extends AbstractController
 
         return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
+
+    #[Route('/validate', methods: ['POST'])]
+    public function validateBasket(
+        UserContext $userContext,
+        HttpClientInterface $billingsClientApi,
+        HttpClientInterface $basketClientApi,
+        HttpClientInterface $paymentClientApi,
+        SerializerInterface $serializer,
+    ): Response
+    {
+        $requestBasket = $basketClientApi->request(
+            'GET',
+            'basket',
+            ['headers' => ['Authorization' => 'Bearer ' . $userContext->getToken()]]
+        );
+
+        if ($requestBasket->getStatusCode() !== 200) {
+            return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $baskets = json_decode($requestBasket->getContent());
+        $input = [
+            'products' => [],
+            'tva' => 20.0
+        ];
+
+        foreach ($baskets as $basket) {
+            $input['products'][] = [
+                'productId' => $basket->productId,
+                'quantity' => $basket->quantity
+            ];
+        }
+
+        $request = $billingsClientApi->request(
+            'POST',
+            "billings",
+            [
+                'body' => $serializer->serialize($input, 'json'),
+                'headers' => ['Authorization' => 'Bearer ' . $userContext->getToken()]
+            ]
+        );
+
+        if (!$request->getStatusCode() === 200) {
+            return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $billingData = json_decode($request->getContent());
+        // billingId
+
+        $requestPayment = $paymentClientApi->request(
+            'POST',
+            'create-payment',
+            [
+                'body' => $serializer->serialize(['billingId' => $billingData->billingId], 'json'),
+                'headers' => ['Authorization' => 'Bearer ' . $userContext->getToken()]
+            ]
+        );
+
+        if ($request->getStatusCode() === 200) {
+            $paymentData = json_decode($requestPayment->getContent());
+            return $this->json([
+                'billingId' => $billingData->billingId,
+                'clientRef' => $paymentData->secret,
+                'paymentReference' => $paymentData->paymentReference
+            ]);
+        }
+
+        return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Consumer\Searcher;
+use RdKafka\Message;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,6 +24,7 @@ class KafkaConsumerCommand extends Command
 
     public function __construct(
         private readonly ParameterBagInterface $params,
+        private readonly Searcher $searcher
     )
     {
         parent::__construct();
@@ -50,14 +53,15 @@ class KafkaConsumerCommand extends Command
                 $message = $consumer->consume(self::TIMEOUT);
                 switch ($message->err) {
                     case RD_KAFKA_RESP_ERR_NO_ERROR:
-                        $output->writeln(
-                            sprintf(
-                                '%s', $message->payload
-                            )
-                        );
-                        // Envoi à kafka le fait qu'on a bien lu le message
-                        // Et donc on passe au prochain offset
-                        $consumer->commit($message);
+                        $output->writeln('Consuming message ..');
+                        if ($this->consumeMessage($message)) {
+                            // Envoi à kafka le fait qu'on a bien lu le message
+                            // Et donc on passe au prochain offset
+                            $consumer->commit($message);
+                            $output->writeln('Message consumed !');
+                        } else {
+                            $output->writeln('Failed to consume message');
+                        }
                         break;
                     case RD_KAFKA_RESP_ERR__PARTITION_EOF:
                     case RD_KAFKA_RESP_ERR__TIMED_OUT:
@@ -82,5 +86,12 @@ class KafkaConsumerCommand extends Command
         $conf->set('auto.offset.reset', 'latest');
 
         return $conf;
+    }
+
+    private function consumeMessage(Message $message): bool
+    {
+        $data = json_decode($message->payload);
+        $consumer = $this->searcher->get($data->table, $data->type);
+        return $consumer?->consume($data->data) ?? true;
     }
 }

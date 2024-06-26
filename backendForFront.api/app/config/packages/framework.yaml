@@ -27,6 +27,14 @@ framework:
                 base_uri: '%env(string:NOTIFICATIONS_DOMAIN_URI)%'
                 headers:
                     'Content-Type': 'application/json'
+            billings.client.api:
+                base_uri: '%env(string:BILLINGS_DOMAIN_URI)%'
+                headers:
+                    'Content-Type': 'application/json'
+            payment.client.api:
+                base_uri: '%env(string:PAYMENT_DOMAIN_URI)%'
+                headers:
+                    'Content-Type': 'application/json'
 
 when@test:
     framework:

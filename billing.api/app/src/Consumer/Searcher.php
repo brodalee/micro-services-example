@@ -5,8 +5,7 @@ namespace App\Consumer;
 class Searcher
 {
     public function __construct(
-        private readonly ProductConsumer $productConsumer,
-        private readonly BasketConsumer $basketConsumer,
+        private readonly BillingsConsumer $billingsConsumer
     )
     {
     }
@@ -14,8 +13,7 @@ class Searcher
     public function get(string $tableName, string $type): ?ConsumerInterface
     {
         $consumer = match ($tableName) {
-            'products' => $this->productConsumer,
-            'baskets' => $this->basketConsumer,
+            'billings' => $this->billingsConsumer,
             default => null
         };
 

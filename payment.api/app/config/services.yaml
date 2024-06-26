@@ -25,3 +25,7 @@ services:
     App\Listener\TokenHandlerListener:
         tags:
             - { name: kernel.event_listener, event: kernel.request }
+
+    Stripe\StripeClient:
+        arguments:
+            - '%env(string:STRIPE_PRIVATE_KEY)%'
