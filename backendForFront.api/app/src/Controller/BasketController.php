@@ -135,7 +135,7 @@ class BasketController extends AbstractController
         );
 
         if ($requestBasket->getStatusCode() !== 200) {
-            return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->json(['error' => 'Internal Server Error basket'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $baskets = json_decode($requestBasket->getContent());

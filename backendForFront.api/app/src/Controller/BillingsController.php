@@ -53,7 +53,7 @@ class BillingsController extends AbstractController
 
                     $item->productName = $product->designation;
                 }
-
+                // TODO : la référence peut être null il faut gérer ça.
                 $payment = $paymentService->fetchPaymentById($billing->paymentReference);
                 if (!$payment) {
                     return $this->json(['error' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
