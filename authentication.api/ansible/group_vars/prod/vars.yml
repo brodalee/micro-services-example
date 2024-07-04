@@ -1,0 +1,11 @@
+---
+env_vars:
+  # TODO : encrypt
+  APP_ENV: "prod"
+  APP_SECRET: "a4f0b52d808a634e77fc3f94b81adac5"
+  APP_DEBUG: 0
+  DATABASE_URL: "postgresql://symfony:symfony@88.167.214.149:55000/authentication"
+  KAFKA_CLUSTER_BOOTSTRAP_ENDPOINT: "88.167.214.149:50000"
+  KAFKA_CDC_EVENT_CONSUMER_GROUP_ID: "authentication"
+  JWT_KEY: "localhost_micro_service_authentication_fFE7GFRGRGYFZRGB97RH"
+  JWT_ALGO: "HS256"

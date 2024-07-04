@@ -1,0 +1,439 @@
+---
+- name: Create a k8s namespace
+  k8s:
+    name: "{{ app_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create service account
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+
+- name: Add edit access to an AD group
+  k8s:
+    state: present
+    resource_definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: edit
+      subjects:
+        - kind: Group
+          name: "{{ ad_group_id }}"
+
+- name: Create a k8s configmap for fastcgi config
+  k8s:
+    state: present
+    force: true
+    resource_definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: "{{ module_name }}-site-fastcgi"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site-fastcgi"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      data:
+        SCRIPT_FILENAME: "/project/public/index.php"
+  notify: Rollout restart deployment
+
+- name: Set secret vars data
+  set_fact:
+    secret_site_env_vars_data: "{{ secret_site_env_vars_data | default({}) | combine({ item.key: item.value | b64encode }) }}"
+  with_items:
+    - "{{ lookup('ansible.builtin.dict', env_vars) }}"
+
+- name: Create a k8s secret for environment variables
+  k8s:
+    state: present
+    force: true
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ module_name }}-site-env-vars"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      type: Opaque
+      data: "{{ secret_site_env_vars_data }}"
+  when: secret_site_env_vars_data is defined
+  notify: Rollout restart deployment
+
+- name: Create Configmap
+  k8s:
+    resource_definition:
+      kind: ConfigMap
+      apiVersion: v1
+      metadata:
+        name: nginx-config
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      data:
+        nginx.conf: |
+          events {
+            worker_connections 4000;
+            multi_accept on;
+            use epoll;
+          }
+          http {
+            server {
+              listen 80 default_server;
+
+              # Set nginx to serve files from the shared volume!
+              root /www/html/public/;
+              index index.php;
+          
+              location / {
+                try_files $uri $uri/ /index.php$is_args$args;
+              }
+              location /bundles {
+                try_files $uri =404;
+              }
+              location ~ \.php$ {
+                fastcgi_pass 127.0.0.1:9000;
+                fastcgi_split_path_info ^(.+\.php)(/.*)$;
+                include fastcgi_params;
+          
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param DOCUMENT_ROOT $document_root;
+                internal;
+                fastcgi_param HTTPS off;
+              }
+              location ~ \.js$ {
+                types { }
+                default_type application/javascript;
+              }
+            }
+          }
+
+- block:
+    - name: Create a k8s deployment
+      k8s:
+        state: present
+        wait: true
+        wait_timeout: 180
+        resource_definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ module_name }}-site"
+            namespace: "{{ app_namespace }}"
+            labels:
+              app: "{{ module_name }}-site"
+              app.kubernetes.io/name: "{{ module_name }}-site"
+              app.kubernetes.io/component: "service"
+              app.kubernetes.io/part-of: "{{ app_name }}"
+              app.kubernetes.io/managed-by: ansible
+          spec:
+            replicas: "{{ min_replicas }}"
+            selector:
+              matchLabels:
+                app: "{{ module_name }}-site"
+            template:
+              metadata:
+                namespace: "{{ app_namespace }}"
+                labels:
+                  app: "{{ module_name }}-site"
+                  app.kubernetes.io/name: "{{ module_name }}-site"
+                  app.kubernetes.io/component: "service"
+                  app.kubernetes.io/part-of: "{{ app_name }}"
+                  app.kubernetes.io/managed-by: ansible
+              spec:
+                terminationGracePeriodSeconds: 90
+                tolerations:
+                  - key: "kubernetes.azure.com/scalesetpriority"
+                    operator: "Equal"
+                    value: "spot"
+                    effect: "NoSchedule"
+                #imagePullSecrets:
+                #  - name: docker-registry
+                volumes:
+                  - name: shared-files
+                    emptyDir: { }
+                  - name: nginx-config-volume
+                    configMap:
+                      name: nginx-config
+                containers:
+                  - name: "{{ module_name }}-site"
+                    image: "{{ app_image_name }}"
+                    imagePullPolicy: Always
+                    volumeMounts:
+                      - name: shared-files
+                        mountPath: /www/html
+                    envFrom:
+                      - secretRef:
+                          name: "{{ module_name }}-site-env-vars"
+                    ports:
+                      - name: fastcgi
+                        containerPort: 9000
+                        protocol: TCP
+                    readinessProbe:
+                      tcpSocket:
+                        port: fastcgi
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                    livenessProbe:
+                      tcpSocket:
+                        port: fastcgi
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                    lifecycle:
+                      postStart:
+                        exec:
+                          command: ["/bin/sh", "-c", "cp -r /project/. /www/html"]
+                      preStop:
+                        exec:
+                          command: ["sleep", "30"]
+                    resources:
+                      requests:
+                        memory: "128Mi"
+                        cpu: "30m"
+                      limits:
+                        memory: "256Mi"
+                        cpu: "60m"
+                    securityContext:
+                      runAsNonRoot: true
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: false
+                      capabilities:
+                        drop:
+                          - all
+                  - name: "{{ module_name }}-site-nginx"
+                    image: "{{ nginx_app_image_name }}"
+                    volumeMounts:
+                      - name: shared-files
+                        mountPath: /www/html
+                      - name: nginx-config-volume
+                        mountPath: /etc/nginx/nginx.conf
+                        subPath: nginx.conf
+                initContainers:
+                  - name: "db-migrate"
+                    image: "{{ app_image_name }}"
+                    command:
+                      - /bin/sh
+                      - -c
+                      - "/usr/local/bin/php bin/console doctrine:migrations:migrate -n"
+                    envFrom:
+                      - secretRef:
+                          name: "{{ module_name }}-site-env-vars"
+                serviceAccountName: "{{ module_name }}-site"
+                securityContext:
+                  runAsUser: 1000
+                  fsGroup: 2000
+          serviceAccountName: "{{ module_name }}-site"
+      register: deployment
+  rescue:
+    - name: Get pods info
+      kubernetes.core.k8s_info:
+        kind: Event
+        namespace: "{{ app_namespace }}"
+      register: events
+    - name: Failed deployment
+      fail:
+        msg: |
+          Deployment failed. Please go to k8s to investigate. Could be :
+            - Deployment take too long. You can increase wait_timeout attribute.
+            - Deployment as failed. Fixed the error and redeploy your app.
+
+- name: Configure a PodDisruptionBudget for this Deployment
+  k8s:
+    state: "{{ (min_replicas > 1) | ternary('present', 'absent', 'absent') }}"
+    resource_definition:
+      apiVersion: policy/v1
+      kind: PodDisruptionBudget
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      spec:
+        maxUnavailable: 1
+        selector:
+          matchLabels:
+            app: "{{ module_name }}-site"
+
+- name: Configure an HorizontalPodAutoscaler for this Deployment
+  k8s:
+    state: "{{ (min_replicas != max_replicas) | ternary('present', 'absent', 'absent') }}"
+    resource_definition:
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      spec:
+        scaleTargetRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: "{{ module_name }}-site"
+        minReplicas: "{{ min_replicas }}"
+        maxReplicas: "{{ max_replicas }}"
+        metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 75
+          - type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+- name: Create a k8s service
+  k8s:
+    state: present
+    resource_definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      spec:
+        type: ClusterIP
+        ports:
+          - name: fastcgi
+            port: 9000
+            protocol: TCP
+            targetPort: fastcgi
+        selector:
+          app: "{{ module_name }}-site"
+
+- name: Create a k8s service
+  k8s:
+    state: present
+    resource_definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      spec:
+        type: LoadBalancer
+        ports:
+          - port: 80
+        selector:
+          app: "{{ module_name }}-site"
+
+- name: Create certificate
+  k8s:
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: Certificate
+      metadata:
+        name: "{{ module_name }}-site-tls"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+      spec:
+        secretName: "{{ module_name }}-site-tls-secret"
+        dnsNames:
+          - localhost
+        issuerRef:
+          name: letsencrypt-prod
+          kind: ClusterIssuer
+
+- name: Create k8s Ingress
+  k8s:
+    state: present
+    definition:
+      kind: Ingress
+      apiVersion: networking.k8s.io/v1
+      metadata:
+        name: "{{ module_name }}-site"
+        namespace: "{{ app_namespace }}"
+        labels:
+          app: "{{ module_name }}-site"
+          app.kubernetes.io/name: "{{ module_name }}-site"
+          app.kubernetes.io/component: "service"
+          app.kubernetes.io/part-of: "{{ app_name }}"
+          app.kubernetes.io/managed-by: ansible
+          prometheus.io/probe: "true"
+        annotations:
+          certmanager.k8s.io/cluster-issuer: letsncrypt-prod
+          nginx.ingress.kubernetes.io/backend-protocol: FCGI
+          nginx.ingress.kubernetes.io/fastcgi-index: index.php
+          nginx.ingress.kubernetes.io/fastcgi-params-configmap: "{{ module_name }}-site"
+          kubernetes.io/tls-acme: "true"
+      spec:
+        ingressClassName: nginx-public
+        tls:
+          - hosts:
+              - localhost
+            secretName: "{{ module_name }}-site-tls-secret"
+        rules:
+          - host: localhost # TODO real url
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: "{{ module_name }}-site"
+                      port:
+                        number: 8080

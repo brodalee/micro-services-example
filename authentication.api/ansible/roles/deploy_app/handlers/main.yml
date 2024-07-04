@@ -1,0 +1,4 @@
+---
+- name: Rollout restart deployment
+  command: kubectl rollout restart deployment {{ module_name }} -n {{ app_namespace }}
+  when: not deployment.changed

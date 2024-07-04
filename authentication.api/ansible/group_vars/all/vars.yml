@@ -1,0 +1,9 @@
+---
+app_name: "microservices_authentication"
+docker_registry_token: ""
+docker_registry_user: ""
+app_image_name: "{{ docker_registry_user }}/ms:auth-phpfpm"
+nginx_app_image_name: "{{ docker_registry_user }}/ms:auth-nginx"
+module_name: ms-auth
+app_namespace: ms-authentication
+ad_group_id: "3baaf3da-7588-4db9-82c8-0704f475dbd0"

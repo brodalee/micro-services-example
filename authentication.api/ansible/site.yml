@@ -1,0 +1,11 @@
+---
+- hosts: fake-host
+  connection: local
+  run_once: true
+  gather_facts: false
+  roles:
+    # - role: deploy_keda
+    # - role: monitoring
+    # - role: metrics-server
+    # - role: deploy_database
+    - role: deploy_app
